@@ -20,9 +20,16 @@ Motor motor(MOTOR_LPWM_PIN, MOTOR_RPWM_PIN, -1, &encoder, &pid);
 
 typedef size_t (*EventFn)(uint8_t *, uint8_t *);
 
+enum Command {
+  SET_SPEED = 1,
+  ENCODER_REQUEST = 2,
+  SET_PID = 3,
+  SET_POSITION = 4
+}
+
 struct EventHandler
 {
-  int instruction;
+  Command command;
   EventFn callback;
 };
 
@@ -35,10 +42,10 @@ long int time_of_last_heartbeat = 0;
 
 void setup()
 {
-  register_event(1, handle_speed_change);
-  register_event(2, handle_encoder_request);
-  register_event(3, handle_set_pid);
-  register_event(4, handle_set_position);
+  register_event(SET_SPEED, handle_speed_change);
+  register_event(ENCODER_REQUEST, handle_encoder_request);
+  register_event(SET_PID, handle_set_pid);
+  register_event(SET_POSITION, handle_set_position);
   motor.setup();
   Serial.begin(115200);
   delay(500);
@@ -46,10 +53,10 @@ void setup()
   time_of_last_heartbeat = millis();
 }
 
-void register_event(int instruction, EventFn callback)
+void register_event(Command instruction, EventFn callback)
 {
   EventHandler event_handler;
-  event_handler.instruction = instruction;
+  event_handler.command = instruction;
   event_handler.callback = callback;
 
   event_handlers[events++] = event_handler;
@@ -150,10 +157,10 @@ void read_serial()
 
   size_t len = cobs_decode(decoded, msg_buffer, buffer_index);
 
-  uint8_t instruction = decoded[0];
+  Command command = (Command)decoded[0];
   uint8_t *data = &decoded[1];
 
-  dispatch(instruction, data);
+  dispatch(command, data);
 
   buffer_index = 0;
 }
@@ -163,13 +170,13 @@ uint8_t reply[REPLY_LENGTH];
 
 uint8_t encoded_reply[REPLY_LENGTH + 2];
 
-void dispatch(uint8_t instruction, uint8_t *data)
+void dispatch(Command command, uint8_t *data)
 {
   for (size_t i = 0; i < events; ++i)
   {
     EventHandler handler = event_handlers[i];
 
-    if (handler.instruction == instruction)
+    if (handler.command == command)
     {
       size_t reply_len = handler.callback(reply, data);
 

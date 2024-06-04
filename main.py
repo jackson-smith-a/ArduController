@@ -1,7 +1,6 @@
 import tkinter as tk
 from gui import GUI
 
-import random
 import threading
 import time
 import queue

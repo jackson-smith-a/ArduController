@@ -23,7 +23,7 @@ public:
     // integrate if within region
     if (fabs(error) < I_region)
     {
-      integrator += error * KI;
+      integrator += error * KI * dt;
 
       // make sure integrator stays within bounds
       if (fabs(integrator) > I_max)

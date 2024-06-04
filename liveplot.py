@@ -1,4 +1,3 @@
-import random
 import time
 import queue
 import matplotlib.pyplot as plt
