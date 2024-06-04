@@ -11,19 +11,20 @@
 // stop all motors after this long without communication
 #define TIMEOUT_MS 500
 
+#define CYCLE_DELAY_MS 10
+
 Encoders encoder(ENCODER_PIN_A, ENCODER_PIN_B);
 PID pid{0.1, 0.008, 2.0, 0, 0, 100, 255, 40};
 
 Motor motor(MOTOR_LPWM_PIN, MOTOR_RPWM_PIN, -1, &encoder, &pid);
 
-
 typedef size_t (*EventFn)(uint8_t *, uint8_t *);
 
-struct EventHandler {
+struct EventHandler
+{
   int instruction;
   EventFn callback;
 };
-
 
 #define MAX_EVENTS 100
 
@@ -32,7 +33,8 @@ EventHandler event_handlers[MAX_EVENTS];
 
 long int time_of_last_heartbeat = 0;
 
-void setup() {
+void setup()
+{
   register_event(1, handle_speed_change);
   register_event(2, handle_encoder_request);
   register_event(3, handle_set_pid);
@@ -44,7 +46,8 @@ void setup() {
   time_of_last_heartbeat = millis();
 }
 
-void register_event(int instruction, EventFn callback) {
+void register_event(int instruction, EventFn callback)
+{
   EventHandler event_handler;
   event_handler.instruction = instruction;
   event_handler.callback = callback;
@@ -54,7 +57,8 @@ void register_event(int instruction, EventFn callback) {
   events %= MAX_EVENTS; // overwriting is better than writing to random memory
 }
 
-size_t handle_set_pid(uint8_t *reply, uint8_t *data) {
+size_t handle_set_pid(uint8_t *reply, uint8_t *data)
+{
   pid.KP = read_float(data, 0);
   pid.KI = read_float(data, 4);
   pid.KD = read_float(data, 8);
@@ -69,7 +73,8 @@ size_t handle_set_pid(uint8_t *reply, uint8_t *data) {
   return 0;
 }
 
-size_t handle_set_position(uint8_t *reply, uint8_t *data) {
+size_t handle_set_position(uint8_t *reply, uint8_t *data)
+{
   long int pos = read_int(data, 0);
   motor.set_position_mode();
   motor.set_position(pos);
@@ -77,15 +82,16 @@ size_t handle_set_position(uint8_t *reply, uint8_t *data) {
   return write_int(reply, pos, 0);
 }
 
-
-size_t handle_speed_change(uint8_t *reply, uint8_t *data) {
+size_t handle_speed_change(uint8_t *reply, uint8_t *data)
+{
   int speed = (int)read_int(data, 0);
   motor.set_analog(speed);
   motor.set_analog_mode();
   return 0;
 }
 
-size_t handle_encoder_request(uint8_t *reply, uint8_t *data) {
+size_t handle_encoder_request(uint8_t *reply, uint8_t *data)
+{
   long int enc = motor.get_enc();
 
   size_t written_length = write_int(reply, enc, 0);
@@ -93,22 +99,26 @@ size_t handle_encoder_request(uint8_t *reply, uint8_t *data) {
   return written_length;
 }
 
-void loop() {
+void loop()
+{
   motor.update();
-  while (Serial.available()) {
+  while (Serial.available())
+  {
     read_serial();
   }
 
   long int time_since_heartbeat = millis() - time_of_last_heartbeat;
-  
-  if (time_since_heartbeat > TIMEOUT_MS) {
-     stop_motors();
+
+  if (time_since_heartbeat > TIMEOUT_MS)
+  {
+    stop_motors();
   }
 
-  delay(10);
+  delay(CYCLE_DELAY_MS);
 }
 
-void stop_motors() {
+void stop_motors()
+{
   motor.stop();
 }
 
@@ -116,19 +126,22 @@ void stop_motors() {
 int buffer_index = 0;
 uint8_t msg_buffer[INCOMING_BUFFER];
 
-void read_serial() {
+void read_serial()
+{
   int new_byte = Serial.read();
 
   // no byte to read
-  if (new_byte == -1) {
+  if (new_byte == -1)
+  {
     return;
   }
-  
+
   time_of_last_heartbeat = millis();
-  
+
   msg_buffer[buffer_index++] = (uint8_t)new_byte;
-  
-  if (new_byte != 0) {
+
+  if (new_byte != 0)
+  {
     // wait until full, 0-delimited message is sent
     return;
   }
@@ -150,14 +163,18 @@ uint8_t reply[REPLY_LENGTH];
 
 uint8_t encoded_reply[REPLY_LENGTH + 2];
 
-void dispatch(uint8_t instruction, uint8_t *data) {
-  for (size_t i = 0; i < events; ++i) {
+void dispatch(uint8_t instruction, uint8_t *data)
+{
+  for (size_t i = 0; i < events; ++i)
+  {
     EventHandler handler = event_handlers[i];
 
-    if (handler.instruction == instruction) {
+    if (handler.instruction == instruction)
+    {
       size_t reply_len = handler.callback(reply, data);
 
-      if (reply_len) {
+      if (reply_len)
+      {
         size_t enc_reply_len = cobs_encode(encoded_reply, reply, reply_len);
         Serial.write(encoded_reply, enc_reply_len);
       }
@@ -165,24 +182,30 @@ void dispatch(uint8_t instruction, uint8_t *data) {
   }
 }
 
-size_t cobs_encode(uint8_t *dst, const uint8_t *src, size_t len) {
+size_t cobs_encode(uint8_t *dst, const uint8_t *src, size_t len)
+{
   uint8_t next_zero = 1;
 
   size_t write_index = 1;
   size_t next_zero_index = 0;
 
-  for (size_t i = 0; i < len; ++i) {
+  for (size_t i = 0; i < len; ++i)
+  {
     uint8_t val = src[i];
-    if (val == 0) {
+    if (val == 0)
+    {
       // encoder proper zero offset
       dst[next_zero_index] = next_zero;
       next_zero = 1;
       next_zero_index = write_index++;
-    } else {
+    }
+    else
+    {
       dst[write_index++] = val;
       next_zero++;
       // if we've hit max, encode placeholder
-      if (next_zero == 0xFF) {
+      if (next_zero == 0xFF)
+      {
         dst[next_zero_index] = next_zero;
         next_zero = 1;
         next_zero_index = write_index++;
@@ -199,20 +222,24 @@ size_t cobs_encode(uint8_t *dst, const uint8_t *src, size_t len) {
   return write_index;
 }
 
-size_t cobs_decode(uint8_t *dst, const uint8_t *src, size_t len) {
+size_t cobs_decode(uint8_t *dst, const uint8_t *src, size_t len)
+{
   size_t dst_idx = 0;
   // don't increment i here so we can do it inside differently depending on data
-  for (size_t i = 0; i < len;) {
+  for (size_t i = 0; i < len;)
+  {
     uint8_t next_zero = src[i++];
 
     // go until we've hit the next zero
-    for (size_t j = 1; j < next_zero && i < len; ++j) {
+    for (size_t j = 1; j < next_zero && i < len; ++j)
+    {
       // copy over bytes normally
       dst[dst_idx++] = src[i++];
     }
 
     // add in the zero unlesss it was a placeholder
-    if (next_zero != 0xFF && i < len - 1) {
+    if (next_zero != 0xFF && i < len - 1)
+    {
       dst[dst_idx++] = 0;
     }
   }
@@ -220,11 +247,12 @@ size_t cobs_decode(uint8_t *dst, const uint8_t *src, size_t len) {
   return dst_idx;
 }
 
-float read_float(uint8_t *buffer, int index) {
+float read_float(uint8_t *buffer, int index)
+{
   uint8_t byte0 = buffer[index];
-  uint8_t byte1 = buffer[index+1];
-  uint8_t byte2 = buffer[index+2];
-  uint8_t byte3 = buffer[index+3];
+  uint8_t byte1 = buffer[index + 1];
+  uint8_t byte2 = buffer[index + 2];
+  uint8_t byte3 = buffer[index + 3];
 
   uint8_t byte_array[] = {byte0, byte1, byte2, byte3};
   float float_value;
@@ -233,11 +261,12 @@ float read_float(uint8_t *buffer, int index) {
   return float_value;
 }
 
-long int read_int(uint8_t *buffer, int index) {
+long int read_int(uint8_t *buffer, int index)
+{
   uint8_t byte0 = buffer[index];
-  uint8_t byte1 = buffer[index+1];
-  uint8_t byte2 = buffer[index+2];
-  uint8_t byte3 = buffer[index+3];
+  uint8_t byte1 = buffer[index + 1];
+  uint8_t byte2 = buffer[index + 2];
+  uint8_t byte3 = buffer[index + 3];
 
   uint8_t byte_array[] = {byte0, byte1, byte2, byte3};
   long int value;
@@ -246,12 +275,14 @@ long int read_int(uint8_t *buffer, int index) {
   return value;
 }
 
-size_t write_int(uint8_t *buffer, long int val, size_t index) {
+size_t write_int(uint8_t *buffer, long int val, size_t index)
+{
   memcpy(buffer + index, &val, sizeof(val));
   return sizeof(val) + index;
 }
 
-size_t write_float(uint8_t *buffer, float val, size_t index) {
+size_t write_float(uint8_t *buffer, float val, size_t index)
+{
   memcpy(buffer + index, &val, sizeof(val));
   return sizeof(val) + index;
 }

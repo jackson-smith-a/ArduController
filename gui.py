@@ -7,6 +7,7 @@ import pickle
 
 SAVE_DIR = r"/home/nvidia/Documents/ArduController/configs"
 
+
 def validate_float(value):
     try:
         float(value)
@@ -36,7 +37,7 @@ properties = [
     ["Int max", validate_float, float],
     ["Control"],
     ["Target position", validate_float, float],
-    ["Analog signal", validate_pwm, int]
+    ["Analog signal", validate_pwm, int],
 ]
 
 defaults = {}
@@ -47,7 +48,7 @@ class GUI(tk.Frame):
         super().__init__(master, *args, **kwargs)
 
         self.motor_frame = tk.Frame(self)
-        
+
         self.ard = ard
         self.setpoint_queue = setpoint_queue
 
@@ -63,29 +64,31 @@ class GUI(tk.Frame):
         self.motor_frame.grid(column=0, row=0, padx=15, pady=15)
 
         self.buttons_frame = tk.Frame(self)
-        
+
         button_commands = [
             ["Send PID", self.send_pid],
             ["Save", self.save],
             ["Load", self.load],
             ["Setpoint", self.update_setpoint],
             ["Reset view", self.reset_view],
-            ["Direct set", self.set_motor]
+            ["Direct set", self.set_motor],
         ]
-        
+
         self.buttons = {}
 
         for i, (text, command) in enumerate(button_commands):
-            self.buttons[text] = tk.Button(self.buttons_frame, text=text, command=command)
+            self.buttons[text] = tk.Button(
+                self.buttons_frame, text=text, command=command
+            )
             self.buttons[text].grid(column=i, row=0, padx=5)
 
         self.buttons_frame.grid(column=0, row=1, padx=15, pady=15)
-        
+
         self.plotter = LivePlotter(self, 5, ["Setpoint", "Encoder"], ["black", "red"])
         self.err_plotter = LivePlotter(self, 5, ["Baseline", "Error"], ["black", "red"])
         self.plotter.grid(column=0, row=2)
         self.err_plotter.grid(column=1, row=2)
-     
+
     def set_motor(self):
         params = self.get()[0]
         self.ard.set_motor(params["Analog signal"])
@@ -94,11 +97,11 @@ class GUI(tk.Frame):
         self.plotter.plot((setpoint, encoder))
         self.err_plotter.plot((0, encoder - setpoint))
         self.err_plotter.reset_view()
-    
+
     def reset_view(self):
         self.plotter.reset_view()
         self.err_plotter.reset_view()
-    
+
     def reset_error(self):
         self.err_plotter.reset_view()
 
@@ -119,7 +122,6 @@ class GUI(tk.Frame):
         file.close()
         for default, motor in zip(defaults, self.motors):
             motor.set(default)
-            
 
     def save(self):
         """Save settings to a file"""
@@ -130,16 +132,16 @@ class GUI(tk.Frame):
     def send_pid(self):
         pid_params = self.get()[0]
         self.ard.set_pid(
-          KP=pid_params["Pos KP"],
-          KI=pid_params["Pos KI"],
-          KD=pid_params["Pos KD"],
-          zero_output=pid_params["Pos cutoff"],
-          min_output=pid_params["Pos min"],
-          max_output=pid_params["Pos max"],
-          I_region=pid_params["Int region"],
-          I_max=pid_params["Int max"]
+            KP=pid_params["Pos KP"],
+            KI=pid_params["Pos KI"],
+            KD=pid_params["Pos KD"],
+            zero_output=pid_params["Pos cutoff"],
+            min_output=pid_params["Pos min"],
+            max_output=pid_params["Pos max"],
+            I_region=pid_params["Int region"],
+            I_max=pid_params["Int max"],
         )
-    
+
     def update_setpoint(self):
         params = self.get()[0]
         self.ard.set_position(params["Target position"])
