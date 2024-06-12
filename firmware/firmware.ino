@@ -25,7 +25,7 @@ enum Command {
   ENCODER_REQUEST = 2,
   SET_PID = 3,
   SET_POSITION = 4
-}
+};
 
 struct EventHandler
 {

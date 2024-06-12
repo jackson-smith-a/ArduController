@@ -5,7 +5,7 @@ import threading
 import time
 import queue
 
-from arduino import Arduino
+from arducontroller import ArduController
 
 
 def plot_encoders(ard, gui, setpoint_queue):
@@ -27,7 +27,7 @@ def on_closing(root, ard, t1):
 
 
 def main():
-    ard = Arduino()
+    ard = ArduController()
 
     setpoint_queue = queue.Queue()
 
