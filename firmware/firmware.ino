@@ -11,10 +11,10 @@
 // stop all motors after this long without communication
 #define TIMEOUT_MS 500
 
-#define CYCLE_DELAY_MS 10
+#define CYCLE_DELAY_MS 5
 
 Encoders encoder(ENCODER_PIN_A, ENCODER_PIN_B);
-PID pid{0.1, 0.008, 2.0, 0, 0, 100, 255, 40};
+PID pid{0, 0, 0, 0, 0, 0, 0, 0};
 
 Motor motor(MOTOR_LPWM_PIN, MOTOR_RPWM_PIN, -1, &encoder, &pid);
 

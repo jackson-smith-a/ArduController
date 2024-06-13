@@ -10,9 +10,12 @@ from arducontroller import ArduController
 
 def plot_encoders(ard, gui, setpoint_queue):
     setpoint = 0
-    while not ard.closed:
+    while True:
         while not setpoint_queue.empty():
             setpoint = setpoint_queue.get()
+
+        if ard.closed:
+            break
 
         enc = ard.request_encoder()[0]
         gui.plot(enc, setpoint)
