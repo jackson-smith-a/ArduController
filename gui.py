@@ -2,6 +2,7 @@ import tkinter as tk
 import tkinter.filedialog as filedialog
 from entry_collection import EntryCollection
 from liveplot import LivePlotter
+import json
 import pickle
 
 
@@ -83,11 +84,14 @@ class GUI(tk.Frame):
             self.buttons[text].grid(column=i, row=0, padx=5)
 
         self.buttons_frame.grid(column=0, row=1, padx=15, pady=15)
+        
+        self.status = tk.Label(self, text="")
+        self.status.grid(column=0, row=2)
 
         self.plotter = LivePlotter(self, 5, ["Setpoint", "Encoder"], ["black", "red"])
         self.err_plotter = LivePlotter(self, 5, ["Baseline", "Error"], ["black", "red"])
-        self.plotter.grid(column=0, row=2)
-        self.err_plotter.grid(column=1, row=2)
+        self.plotter.grid(column=0, row=3)
+        self.err_plotter.grid(column=1, row=3)
 
     def set_motor(self):
         params = self.get()[0]
@@ -117,16 +121,34 @@ class GUI(tk.Frame):
 
     def load(self):
         """Load settings from a file"""
-        file = filedialog.askopenfile(mode="rb", initialdir=SAVE_DIR)
-        defaults = pickle.load(file)
+        try:
+            file = filedialog.askopenfile(mode="r", initialdir=SAVE_DIR)
+        except PermissionError:
+            self.status["text"] = "Failed to load config. Permission error."
+            return
+
+        try:
+            defaults = json.load(file)
+            
+            for default, motor in zip(defaults, self.motors):
+                motor.set(default)
+            
+            
+            self.status["text"] = "Loaded file."
+
+        except ValueError:
+            self.status["text"] = "Failed to load config. Invalid JSON."
+
         file.close()
-        for default, motor in zip(defaults, self.motors):
-            motor.set(default)
 
     def save(self):
         """Save settings to a file"""
-        file = filedialog.asksaveasfile(mode="wb", initialdir=SAVE_DIR)
-        pickle.dump(self.get(), file)
+        try:
+            file = filedialog.asksaveasfile(mode="w", initialdir=SAVE_DIR)
+        except PermissionError:
+            self.status["text"] = "Failed to save config. Permission error."
+            return
+        json.dump(self.get(), file)
         file.close()
 
     def send_pid(self):

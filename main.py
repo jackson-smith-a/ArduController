@@ -23,10 +23,11 @@ def plot_encoders(ard, gui, setpoint_queue):
         time.sleep(0.005)  # 5 ms delay to avoid loading too many datapoints
 
 
-def on_closing(root, ard, t1):
+def on_closing(root, ard):
+    ard.wait_for_unlock()
     ard.close()
-    root.quit()
     root.destroy()
+    root.quit()
 
 
 def main():
@@ -45,7 +46,7 @@ def main():
     )
     t1.start()
 
-    root.protocol("WM_DELETE_WINDOW", lambda: on_closing(root, ard, t1))
+    root.protocol("WM_DELETE_WINDOW", lambda: on_closing(root, ard))
 
     root.mainloop()
 

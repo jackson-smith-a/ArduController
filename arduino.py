@@ -17,11 +17,11 @@ class Command:
 
 def serial_transaction(method):
     def f(self, *args, **kwargs):
-        self._wait_for_unlock()
+        self.wait_for_unlock()
         if self.closed:
             return
         msg = method(self, *args, **kwargs)
-        self._unlock()
+        self.unlock()
         return msg
 
     return f
@@ -41,12 +41,12 @@ class Arduino:
         self.locked = False
         self.closed = False
 
-    def _wait_for_unlock(self):
+    def wait_for_unlock(self):
         while self.locked:
             continue
         self.locked = True
 
-    def _unlock(self):
+    def unlock(self):
         self.locked = False
 
     def close(self):
@@ -60,6 +60,8 @@ class Arduino:
         return self.ser.inWaiting()
 
     def read(self):
+        if self.closed:
+            return ""
         return cobs_decode(self.ser.read_until(b"\00"))
 
     def write(self, data):

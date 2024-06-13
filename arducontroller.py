@@ -53,9 +53,9 @@ class ArduController(Arduino):
         message = bytes([instruction])
         try:
             message += pack_values(args)
+            self.write(message)
         except ValueError:
             raise BadCommandError(f"Invalid command argument list {repr(args)}")
-        self.write(message)
 
     def read_pattern(self, pattern):
         msg = self.read()
