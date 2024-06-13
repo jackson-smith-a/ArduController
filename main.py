@@ -36,6 +36,7 @@ def main():
     setpoint_queue = queue.Queue()
 
     root = tk.Tk()
+    root.title("ArduController")
 
     gui = GUI(root, 1, ard, setpoint_queue)
 
