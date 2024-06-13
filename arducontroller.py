@@ -1,4 +1,4 @@
-from arduino import Arduino, wait_for_serial
+from arduino import Arduino, serial_transaction
 import struct
 
 
@@ -18,11 +18,11 @@ class ArduController(Arduino):
     def __init__(self, port="/dev/ttyACM0", baud_rate=115200):
         super().__init__(port, baud_rate)
 
-    @wait_for_serial
+    @serial_transaction
     def set_motor(self, speed):
         self.send_command(Command.SET_MOTOR, int(speed))
 
-    @wait_for_serial
+    @serial_transaction
     def set_pid(self, KP, KI, KD, zero_output, min_output, max_output, I_region, I_max):
         self.send_command(
             Command.SET_PID,
@@ -36,13 +36,13 @@ class ArduController(Arduino):
             float(I_max),
         )
 
-    @wait_for_serial
+    @serial_transaction
     def set_position(self, position):
         self.send_command(Command.SET_POSITION, int(position))
         reply = self.read_pattern("i")[0]
         return reply
 
-    @wait_for_serial
+    @serial_transaction
     def request_encoder(self):
         self.send_command(Command.REQUEST_ENCODER)
         results, msg = self.read_pattern("i")

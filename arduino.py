@@ -15,7 +15,7 @@ class Command:
     SET_POSITION = 4
 
 
-def wait_for_serial(method):
+def serial_transaction(method):
     def f(self, *args, **kwargs):
         self._wait_for_unlock()
         if self.closed:
