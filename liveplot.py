@@ -1,14 +1,20 @@
+"""Graph data in real time.
+
+Jackson Smith
+Final Project
+"""
+
 import time
 import queue
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from matplotlib.ticker import FuncFormatter
 from tkinter import *
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 class LivePlotter(ttk.Frame):
+    """Plot data in real time in a tkinter Canvas."""
     def __init__(
         self,
         root,
@@ -19,6 +25,20 @@ class LivePlotter(ttk.Frame):
         line_width=2,
         **kwargs
     ):
+        """Initialize a LivePlotter object.
+
+        Args:
+            root (tkinter.Tk or tkinter.Toplevel): The parent Tkinter window for the plot.
+            time_scale (float): The maximum x-axis value for the plot.
+            labels (list of str): A list of labels for the different lines in the plot.
+            colors (list of str): A list of colors for the different lines in the plot.
+            update_interval (int): The interval (in milliseconds) between updates to the plot.
+            line_width (int): The line width for the plotted lines.
+            **kwargs: Additional keyword arguments for the Tkinter Frame constructor.
+
+        Raises:
+            AssertionError: If the number of labels and colors does not match.
+        """
         assert len(labels) == len(colors)
         super().__init__(root, **kwargs)
 
@@ -61,16 +81,35 @@ class LivePlotter(ttk.Frame):
         self.max_y = float("-inf")
 
     def plot(self, data_points):
+        """Adds new data points to the plot.
+
+        Args:
+            data_points (list of float): A list of y-values to be plotted.
+        """
         current_time = time.time() - self.start
         self.value_queue.put((current_time, data_points))
 
     def init(self):
+        """Initializes the plot for the first frame.
+
+        Args:
+            self (LivePlotter): An instance of the LivePlotter class.
+        """
         self.ax.set_xlim(0, self.time_scale)
         for line in self.lines:
             line.set_data([], [])
         return self.lines
 
     def update_plot(self, frame):
+        """Updates the plot with new data points.
+
+        Args:
+            frame (int): The current frame number. This argument is used by
+                Matplotlib's animation module and is not relevant for this function.
+
+        Returns:
+            list: A list of Matplotlib lines representing the updated plot.
+        """
         while not self.value_queue.empty():
             x, y_points = self.value_queue.get()
             self.x_data.append(x)
@@ -109,9 +148,22 @@ class LivePlotter(ttk.Frame):
         return self.lines
 
     def reset_view(self):
+        """Resets the view of the plot to its initial state.
+
+        This method resets the minimum and maximum y-axis values to their
+        initial values of infinity and negative infinity, respectively.
+
+        Args:
+            self (LivePlotter): An instance of the LivePlotter class.
+        """
         self.min_y = float("inf")
         self.max_y = -float("inf")
 
     def __del__(self):
+        """Stop the animation when the LivePlotter object is deleted.
+
+        Args:
+            self (LivePlotter): An instance of the LivePlotter class.
+        """
         if self.ani.event_source is not None:
             self.ani.event_source.stop()

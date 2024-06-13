@@ -48,11 +48,13 @@ void setup()
   register_event(SET_POSITION, handle_set_position);
   motor.setup();
   Serial.begin(115200);
+  // Startup delay for Arduino oddness
   delay(500);
 
   time_of_last_heartbeat = millis();
 }
 
+// Register a new event
 void register_event(Command instruction, EventFn callback)
 {
   EventHandler event_handler;
@@ -64,6 +66,7 @@ void register_event(Command instruction, EventFn callback)
   events %= MAX_EVENTS; // overwriting is better than writing to random memory
 }
 
+// Update PID params
 size_t handle_set_pid(uint8_t *reply, uint8_t *data)
 {
   pid.KP = read_float(data, 0);
@@ -80,6 +83,7 @@ size_t handle_set_pid(uint8_t *reply, uint8_t *data)
   return 0;
 }
 
+// Update PID setpoint
 size_t handle_set_position(uint8_t *reply, uint8_t *data)
 {
   long int pos = read_int(data, 0);
@@ -89,6 +93,7 @@ size_t handle_set_position(uint8_t *reply, uint8_t *data)
   return write_int(reply, pos, 0);
 }
 
+// Change motor speed
 size_t handle_speed_change(uint8_t *reply, uint8_t *data)
 {
   int speed = (int)read_int(data, 0);
@@ -97,6 +102,7 @@ size_t handle_speed_change(uint8_t *reply, uint8_t *data)
   return 0;
 }
 
+// Write encoder counts to serial
 size_t handle_encoder_request(uint8_t *reply, uint8_t *data)
 {
   long int enc = motor.get_enc();
@@ -124,6 +130,7 @@ void loop()
   delay(CYCLE_DELAY_MS);
 }
 
+// Stop all motors
 void stop_motors()
 {
   motor.stop();
@@ -133,6 +140,7 @@ void stop_motors()
 int buffer_index = 0;
 uint8_t msg_buffer[INCOMING_BUFFER];
 
+// Handle reading a byte from serial port
 void read_serial()
 {
   int new_byte = Serial.read();
@@ -170,6 +178,7 @@ uint8_t reply[REPLY_LENGTH];
 
 uint8_t encoded_reply[REPLY_LENGTH + 2];
 
+// Dispatch a command to a function
 void dispatch(Command command, uint8_t *data)
 {
   for (size_t i = 0; i < events; ++i)
@@ -189,6 +198,7 @@ void dispatch(Command command, uint8_t *data)
   }
 }
 
+// COBS encode a byte buffer
 size_t cobs_encode(uint8_t *dst, const uint8_t *src, size_t len)
 {
   uint8_t next_zero = 1;
@@ -229,6 +239,7 @@ size_t cobs_encode(uint8_t *dst, const uint8_t *src, size_t len)
   return write_index;
 }
 
+// COBS decode a byte buffer
 size_t cobs_decode(uint8_t *dst, const uint8_t *src, size_t len)
 {
   size_t dst_idx = 0;
@@ -254,6 +265,7 @@ size_t cobs_decode(uint8_t *dst, const uint8_t *src, size_t len)
   return dst_idx;
 }
 
+// Read a float from a byte buffer
 float read_float(uint8_t *buffer, int index)
 {
   uint8_t byte0 = buffer[index];
@@ -268,6 +280,7 @@ float read_float(uint8_t *buffer, int index)
   return float_value;
 }
 
+// Read a long int from a byte buffer
 long int read_int(uint8_t *buffer, int index)
 {
   uint8_t byte0 = buffer[index];
@@ -282,12 +295,14 @@ long int read_int(uint8_t *buffer, int index)
   return value;
 }
 
+// Write a long int to a byte buffer
 size_t write_int(uint8_t *buffer, long int val, size_t index)
 {
   memcpy(buffer + index, &val, sizeof(val));
   return sizeof(val) + index;
 }
 
+// Write a float to a byte buffer
 size_t write_float(uint8_t *buffer, float val, size_t index)
 {
   memcpy(buffer + index, &val, sizeof(val));

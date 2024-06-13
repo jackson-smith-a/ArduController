@@ -1,5 +1,9 @@
 #pragma once
 
+/*
+Implements a simple PID Controller.
+*/
+
 class PID
 {
 public:
@@ -55,7 +59,6 @@ public:
   double zero_output, min_output, max_output;
   double I_region, I_max;
 
-  // private:
   double prev_time = 0;
   double prev_measurement = 0;
   double integrator = 0;

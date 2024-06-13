@@ -1,8 +1,26 @@
+"""Encapsulate a sequence of stacked, validated entry fields.
+
+Jackson Smith
+Final Project
+"""
+
+
 import tkinter as tk
 
 
 class EntryCollection(tk.Frame):
+    """A collection of stacked Entry objects."""
     def __init__(self, master, name, properties, defaults=None):
+        """
+        Initialize a new EntryCollection instance.
+
+        Args:
+            master: The parent widget for the EntryCollection.
+            name: The title of the EntryCollection.
+            properties: A list of tuples, where each tuple contains a
+                        property name and optional validator and converter.
+            defaults: A dictionary of default values for the properties.
+        """
         super().__init__(master)
 
         self.defaults = defaults
@@ -41,6 +59,11 @@ class EntryCollection(tk.Frame):
             self.entries[prop] = (entry, converter)
 
     def set(self, defaults):
+        """Update the values of the Entry objects in the collection.
+
+        Args:
+            defaults (dict): A dictionary containing the default values for the properties.
+        """
         for prop in self.entries.keys():
             entry, _ = self.entries[prop]
             entry.delete(0, tk.END)
@@ -48,10 +71,15 @@ class EntryCollection(tk.Frame):
                 continue
             entry.insert(0, defaults[prop])
 
-    def restore_defaults(self):
-        self.set(self.defaults)
-
     def get(self):
+        """Retrieve the values of the Entry objects in the collection.
+
+        Returns:
+            A dictionary containing the values of the Entry objects.
+            The keys of the dictionary are the property names, and the values
+            are the converted values of the Entry objects.
+            If an Entry object is empty, the corresponding value in the dictionary will be None.
+        """
         results = {}
         for prop, (entry, converter) in self.entries.items():
             value = entry.get()

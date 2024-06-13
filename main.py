@@ -1,3 +1,9 @@
+"""Run the main application.
+
+Jackson Smith
+Final Project
+"""
+
 import tkinter as tk
 from gui import GUI
 
@@ -9,6 +15,13 @@ from arducontroller import ArduController
 
 
 def plot_encoders(ard, gui, setpoint_queue):
+    """Continuously plots the encoder values and setpoints.
+
+    Args:
+        ard (ArduController): The Arduino controller object to retrieve encoder values from.
+        gui (GUI): The GUI object to plot the encoder values and setpoints on.
+        setpoint_queue (Queue): A queue object to receive setpoints from other parts of the program.
+    """
     setpoint = 0
     while True:
         while not setpoint_queue.empty():
@@ -24,6 +37,7 @@ def plot_encoders(ard, gui, setpoint_queue):
 
 
 def on_closing(root, ard):
+    """Close GUI and arduino connection."""
     ard.wait_for_unlock()
     ard.close()
     root.destroy()

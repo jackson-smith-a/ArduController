@@ -1,15 +1,28 @@
+"""Handle the program's main GUI.
+
+Jackson Smith
+Final Project
+"""
+
 import tkinter as tk
 import tkinter.filedialog as filedialog
 from entry_collection import EntryCollection
 from liveplot import LivePlotter
 import json
-import pickle
 
-
+# Default directory for config files
 SAVE_DIR = r"/home/nvidia/Documents/ArduController/configs"
 
 
 def validate_float(value):
+    """Validate if the input value is a valid float.
+
+    Args:
+        value: The input value to be validated.
+
+    Returns:
+        Returns True if the input value is a valid float, otherwise returns False.
+    """
     try:
         float(value)
         return True
@@ -18,12 +31,20 @@ def validate_float(value):
 
 
 def validate_pwm(value):
+    """Validate if the input value is a valid PWM value.
+
+    Args:
+        value: The input value to be validated.
+
+    Returns:
+        Returns True if the input value is a valid PWM value, otherwise returns False.
+    """
     try:
         return -255 <= int(value) <= 255
     except ValueError:
         return value == ""
 
-
+# GUI entries
 properties = [
     ["General"],
     ["Scaling factor", validate_float, float],
@@ -41,11 +62,22 @@ properties = [
     ["Analog signal", validate_pwm, int],
 ]
 
+# default values (blank for now)
 defaults = {}
 
 
 class GUI(tk.Frame):
+    """Primary interface for PID tuning."""
     def __init__(self, master, motor_count, ard, setpoint_queue, *args, **kwargs):
+        """Initialize the GUI class.
+
+        Args:
+            master: The parent Tkinter window.
+            motor_count: The number of motors to be controlled.
+            ard: The ArduController object that communicates with the hardware.
+            setpoint_queue: The queue that holds the setpoint values.
+            *args, **kwargs: Additional arguments and keyword arguments for tk.Frame.
+        """
         super().__init__(master, *args, **kwargs)
 
         self.motor_frame = tk.Frame(self)
@@ -125,6 +157,9 @@ class GUI(tk.Frame):
             file = filedialog.askopenfile(mode="r", initialdir=SAVE_DIR)
         except PermissionError:
             self.status["text"] = "Failed to load config. Permission error."
+            return
+        except FileNotFoundError:
+            self.status["text"] = "Failed to load config. File not found."
             return
 
         try:
