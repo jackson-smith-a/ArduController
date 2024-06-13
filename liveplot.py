@@ -104,7 +104,6 @@ class LivePlotter(ttk.Frame):
             gap = max(1, 0.1 * abs(self.max_y - self.min_y))
             self.ax.set_ylim(self.min_y - gap, self.max_y + gap)
 
-        # self.ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.0f}'))  # Update y-axis labels
         for line, y_list in zip(self.lines, self.y_data):
             line.set_data(self.x_data, y_list)
         return self.lines

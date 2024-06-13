@@ -44,7 +44,7 @@ defaults = {}
 
 
 class GUI(tk.Frame):
-    def __init__(self, master, motors, ard, setpoint_queue, *args, **kwargs):
+    def __init__(self, master, motor_count, ard, setpoint_queue, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
 
         self.motor_frame = tk.Frame(self)
@@ -53,7 +53,7 @@ class GUI(tk.Frame):
         self.setpoint_queue = setpoint_queue
 
         self.motors = []
-        for i in range(motors):
+        for i in range(motor_count):
             motor_entries = EntryCollection(
                 self.motor_frame, f"Motor {i}", properties, defaults
             )

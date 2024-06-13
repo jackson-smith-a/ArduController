@@ -29,7 +29,10 @@ def serial_transaction(method):
 
 class Arduino:
     def __init__(self, port="/dev/ttyACM0", baud_rate=115200):
-        self.ser = serial.Serial(port, baud_rate)
+        self.reopen(port, baud_rate)
+    
+    def reopen(self, port="/dev/ttyACM0", baud_rate=115200):
+        self.ser = serial.Serial(port, baud_rate, timeout=1, write_timeout=1)
         if not self.ser.isOpen():
             self.ser.open()
 
